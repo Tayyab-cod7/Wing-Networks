@@ -821,7 +821,7 @@
     </script>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        const API_URL = 'http://69.62.119.91:5000';
         
         // DOM Elements
         const userBalance = document.getElementById('userBalance');
@@ -858,10 +858,15 @@
 
         // Function to check and update active package
         async function checkActivePackage() {
+            console.log('Checking active package status...');
             const token = localStorage.getItem('token');
-            if (!token) return { package: 'No Package', isActive: false };
+            if (!token) {
+                console.log('No token found, returning default package status');
+                return { package: 'No Package', isActive: false };
+            }
 
             try {
+                console.log('Fetching package status from API...');
                 const response = await fetch(`${API_URL}/api/earnings/package-status`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -869,13 +874,15 @@
                     }
                 });
                 
+                console.log('Package status response:', response.status);
                 const statusData = await response.json();
-                console.log('Package status:', statusData);
+                console.log('Package status data:', statusData);
 
                 let userPackage = 'No Package';
                 let isPackageActive = false;
 
                 if (statusData.hasActivePackage && statusData.activePackage) {
+                    console.log('Active package found:', statusData.activePackage);
                     if (statusData.activePackage.includes('basic')) {
                         userPackage = 'Basic';
                         isPackageActive = true;
@@ -890,6 +897,7 @@
 
                 // Update the display
                 if (userPackageSpan) {
+                    console.log('Updating package display:', userPackage);
                     userPackageSpan.textContent = userPackage;
                     userPackageSpan.style.color = isPackageActive ? 'var(--primary-color)' : 'var(--danger-color)';
                     
@@ -903,6 +911,7 @@
                     const packageLimitsDisplay = document.querySelector('.package-limits');
                     if (packageLimitsDisplay) {
                         const limits = isPackageActive ? packageLimits[userPackage] || { min: 0, max: 0 } : { min: 0, max: 0 };
+                        console.log('Setting withdrawal limits:', limits);
                         packageLimitsDisplay.innerHTML = `
                             <i class="fas fa-wallet"></i>
                             Your withdrawal limit: Rs. ${limits.min} - Rs. ${limits.max}
@@ -913,6 +922,7 @@
                 // Update input constraints
                 if (withdrawAmount) {
                     const limits = isPackageActive ? packageLimits[userPackage] || { min: 0, max: 0 } : { min: 0, max: 0 };
+                    console.log('Updating withdrawal input constraints:', limits);
                     withdrawAmount.min = limits.min;
                     withdrawAmount.max = limits.max;
                     withdrawAmount.placeholder = `Enter amount (${limits.min}-${limits.max})`;
@@ -930,17 +940,26 @@
         // Load User Balance
         async function loadBalance() {
             try {
+                console.log('Loading user balance...');
                 const token = localStorage.getItem('token');
+                
+                console.log('Fetching balance from API...');
                 const response = await fetch(`${API_URL}/api/earnings`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
+                
+                console.log('Balance response status:', response.status);
                 const data = await response.json();
+                console.log('Balance data:', data);
                 
                 if (data.success) {
+                    console.log('Setting user balance:', data.balance);
                     userBalance.textContent = `Rs. ${data.balance}`;
                     updateWithdrawalButtonState();
+                } else {
+                    console.error('Failed to load balance:', data.message);
                 }
             } catch (error) {
                 console.error('Error loading balance:', error);
