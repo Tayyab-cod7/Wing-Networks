@@ -40,9 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? ['http://69.62.119.91:5000', 'http://69.62.119.91']
-    : ['http://localhost:5000', 'http://localhost:3000', 'http://127.0.0.1:5000'],
+  origin: ['http://69.62.119.91', 'http://69.62.119.91:80', 'http://69.62.119.91:5000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -162,7 +160,7 @@ let server;
 
 const startServer = async () => {
   try {
-    server = app.listen(PORT, () => {
+    server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server is running on port ${PORT}`);
     });
   } catch (error) {
@@ -179,10 +177,15 @@ process.on('SIGTERM', () => {
   if (server) {
     server.close(() => {
       console.log('Server closed');
-      mongoose.connection.close(false, () => {
-        console.log('MongoDB connection closed');
-        process.exit(0);
-      });
+      mongoose.connection.close()
+        .then(() => {
+          console.log('MongoDB connection closed.');
+          process.exit(0);
+        })
+        .catch((err) => {
+          console.error('Error closing MongoDB connection:', err);
+          process.exit(1);
+        });
     });
   }
 });
@@ -192,10 +195,15 @@ process.on('SIGINT', () => {
   if (server) {
     server.close(() => {
       console.log('Server closed');
-      mongoose.connection.close(false, () => {
-        console.log('MongoDB connection closed');
-        process.exit(0);
-      });
+      mongoose.connection.close()
+        .then(() => {
+          console.log('MongoDB connection closed.');
+          process.exit(0);
+        })
+        .catch((err) => {
+          console.error('Error closing MongoDB connection:', err);
+          process.exit(1);
+        });
     });
   }
 });
