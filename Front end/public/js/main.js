@@ -21,8 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // API Base URL
-    const API_URL = 'http://localhost:5000';
+    // API Configuration
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_URL = isLocalhost 
+        ? 'http://localhost:5000'
+        : 'http://69.62.119.91:5000';
 
     // Input validation functions
     const validatePhoneNumber = (phone) => {
@@ -144,91 +147,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Handle Signup
-    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const form = e.target;
-        
-        const formData = {
-            phone: document.getElementById('signupPhone').value.trim(),
-            password: document.getElementById('signupPassword').value,
-            referralCode: document.getElementById('referralCode').value.trim()
-        };
-
-        // Prevent signup with admin phone number
-        if (formData.phone === '03151251123') {
-            showError('This phone number is reserved for admin use only. Please use a different number.');
-            return;
-        }
-
-        // Check terms and conditions
-        const termsCheckbox = document.getElementById('termsCheckbox');
-        if (!termsCheckbox || !termsCheckbox.checked) {
-            showError('Please accept the Terms and Conditions');
-            return;
-        }
-
-        // Basic validation
-        if (!formData.phone || !formData.password || !formData.referralCode) {
-            showError('All fields are required');
-            return;
-        }
-
-        // Phone number validation
-        if (!validatePhoneNumber(formData.phone)) {
-            showError('Phone number must be exactly 11 digits, numbers only');
-            return;
-        }
-
-        // Password validation
-        if (!validatePassword(formData.password)) {
-            showError('Password must be 6-8 characters, letters and numbers only');
-            return;
-        }
-
-        // Referral code validation
-        if (!validateReferralCode(formData.referralCode)) {
-            showError('Referral code must be exactly 6 digits, numbers only');
-            return;
-        }
-
-        setLoading(form, true);
 
         try {
-            console.log('Sending registration data:', formData);
+            const phone = document.getElementById('signupPhone').value;
+            const password = document.getElementById('signupPassword').value;
+            const referredBy = document.getElementById('referralCode').value;
+
+            const registrationData = {
+                phone,
+                password,
+                referredBy  // Changed from referralCode to referredBy
+            };
+
+            console.log('Sending registration data:', registrationData);
+            console.log('Using API URL:', API_URL);  // Add this line for debugging
+
             const response = await fetch(`${API_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(registrationData)
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Registration failed');
-            }
-
             const data = await response.json();
-            console.log('Registration response:', data);
 
             if (data.success) {
-                setToken(data.token, data.user);
-                showSuccess('Registration successful! Redirecting...');
-                setTimeout(() => {
-                    window.location.href = 'basic.html';
-                }, 1500);
+                showSuccess('Registration successful! Please login.');
+                // Clear the form
+                this.reset();
+                // Switch to login form
+                showLoginForm();
             } else {
-                showError(data.error || 'Registration failed. Please try again.');
+                showError(data.message || 'Registration failed');
             }
         } catch (error) {
             console.error('Registration error:', error);
-            if (!navigator.onLine) {
-                showError('Please check your internet connection and try again.');
-            } else {
-                showError(error.message || 'Server error. Please try again later.');
-            }
-        } finally {
-            setLoading(form, false);
+            showError('Error during registration. Please try again.');
         }
     });
 
