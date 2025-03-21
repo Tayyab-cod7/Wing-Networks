@@ -673,7 +673,7 @@
     </script>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        const API_URL = 'http://69.62.119.91:5000';
 
         // Check if server is available
         async function checkServer() {
@@ -723,10 +723,12 @@
         async function loadReferralData() {
             if (!checkAuth()) return;
 
+            console.log('Starting to load referral data...');
             const token = localStorage.getItem('token');
             
             try {
                 // Get user profile data
+                console.log('Fetching user profile data...');
                 const profileResponse = await fetch(`${API_URL}/api/auth/me`, {
                     method: 'GET',
                     headers: {
@@ -735,8 +737,11 @@
                     }
                 });
 
+                console.log('Profile response status:', profileResponse.status);
+
                 if (!profileResponse.ok) {
                     if (profileResponse.status === 401) {
+                        console.log('Unauthorized access, clearing storage and redirecting...');
                         localStorage.clear();
                         window.location.href = 'index.html';
                         return;
@@ -745,17 +750,23 @@
                 }
 
                 const profileData = await profileResponse.json();
+                console.log('Profile data received:', profileData);
 
                 if (!profileData.success) {
+                    console.error('Profile data error:', profileData.error);
                     throw new Error(profileData.error || 'Failed to load profile data');
                 }
 
                 // Update referral code and link
                 const referralCode = profileData.data?.referralCode || 'Not available';
+                console.log('Referral code:', referralCode);
                 document.getElementById('referralCode').textContent = referralCode;
-                document.getElementById('referralLink').textContent = `${window.location.origin}/index.html?ref=${referralCode}`;
+                const referralLink = `${window.location.origin}/index.html?ref=${referralCode}`;
+                console.log('Referral link:', referralLink);
+                document.getElementById('referralLink').textContent = referralLink;
 
                 // Get earnings data
+                console.log('Fetching earnings data...');
                 const earningsResponse = await fetch(`${API_URL}/api/earnings`, {
                     method: 'GET',
                     headers: {
@@ -764,24 +775,30 @@
                     }
                 });
 
+                console.log('Earnings response status:', earningsResponse.status);
+
                 if (!earningsResponse.ok) {
                     throw new Error('Failed to load earnings data');
                 }
 
                 const earningsData = await earningsResponse.json();
+                console.log('Earnings data received:', earningsData);
 
                 // Update UI with combined data
                 if (earningsData.success) {
                     // Update total referrals count from profile data
                     const totalReferrals = profileData.data?.referralCount || 0;
+                    console.log('Total referrals:', totalReferrals);
                     document.getElementById('totalReferrals').textContent = totalReferrals;
                     
                     // Update total earnings from referrals
                     const referralEarnings = profileData.data?.referralEarnings || 0;
+                    console.log('Referral earnings:', referralEarnings);
                     document.getElementById('referralEarnings').textContent = `RS ${referralEarnings}`;
 
                     // Get referrals list
                     const referrals = profileData.data?.referrals || [];
+                    console.log('Referrals list:', referrals);
                     
                     // Remove any existing team container
                     const existingTeamContainer = document.querySelector('.referral-box.team-container');
@@ -791,12 +808,14 @@
 
                     // If there are referrals in profile data, display them
                     if (referrals.length > 0) {
+                        console.log('Building team members display...');
                         const teamContainer = document.createElement('div');
                         teamContainer.className = 'referral-box team-container';
                         teamContainer.innerHTML = `
                             <h2 class="referral-title">Your Team Members</h2>
                             <div class="team-members">
                                 ${referrals.map(member => {
+                                    console.log('Processing team member:', member);
                                     return `
                                         <div class="team-member">
                                             <div class="member-info">
@@ -811,12 +830,9 @@
                             </div>
                         `;
                         document.querySelector('.referral-container').appendChild(teamContainer);
+                        console.log('Team members display completed');
                     }
                 }
-
-                // Log the data to help debug
-                console.log('Profile Data:', profileData);
-                console.log('Earnings Data:', earningsData);
 
             } catch (error) {
                 console.error('Error loading referral data:', error);
