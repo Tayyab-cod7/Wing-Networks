@@ -25,7 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const API_URL = isLocalhost 
         ? 'http://localhost:5000'
-        : 'http://69.62.119.91:5000';
+        : `http://${window.location.hostname}:5000`;  // Use the same hostname as the frontend
+
+    console.log('API Configuration:', {
+        hostname: window.location.hostname,
+        isLocalhost: isLocalhost,
+        API_URL: API_URL
+    });
 
     // Input validation functions
     const validatePhoneNumber = (phone) => {
@@ -149,25 +155,53 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle Signup
     document.getElementById('signupForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        const form = e.target;
 
         try {
-            const phone = document.getElementById('signupPhone').value;
+            const phone = document.getElementById('signupPhone').value.trim();
             const password = document.getElementById('signupPassword').value;
-            const referredBy = document.getElementById('referralCode').value;
+            const referralCode = document.getElementById('referralCode').value.trim();
+
+            // Validate inputs
+            if (!validatePhoneNumber(phone)) {
+                showError('Phone number must be exactly 11 digits, numbers only');
+                return;
+            }
+
+            if (!validatePassword(password)) {
+                showError('Password must be 6-8 characters, letters and numbers only');
+                return;
+            }
+
+            if (!validateReferralCode(referralCode)) {
+                showError('Referral code must be exactly 6 digits, numbers only');
+                return;
+            }
+
+            // Check terms and conditions
+            const termsCheckbox = document.getElementById('termsCheckbox');
+            if (!termsCheckbox || !termsCheckbox.checked) {
+                showError('Please accept the Terms and Conditions');
+                return;
+            }
 
             const registrationData = {
                 phone,
                 password,
-                referredBy  // Changed from referralCode to referredBy
+                referralCode  // Using referralCode instead of referredBy
             };
 
+            console.log('Current hostname:', window.location.hostname);
+            console.log('API URL:', API_URL);
             console.log('Sending registration data:', registrationData);
-            console.log('Using API URL:', API_URL);  // Add this line for debugging
+
+            setLoading(form, true);
 
             const response = await fetch(`${API_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify(registrationData)
             });
@@ -176,16 +210,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.success) {
                 showSuccess('Registration successful! Please login.');
-                // Clear the form
-                this.reset();
+                form.reset();
                 // Switch to login form
-                showLoginForm();
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
             } else {
                 showError(data.message || 'Registration failed');
             }
         } catch (error) {
             console.error('Registration error:', error);
             showError('Error during registration. Please try again.');
+        } finally {
+            setLoading(form, false);
         }
     });
 
