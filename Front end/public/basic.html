@@ -644,9 +644,29 @@
     </script>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        // API Configuration
+        const API_URL = 'http://69.62.119.91:5000';
 
-        // Check Authentication
+        // Error and success message handling
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Authentication check
         function checkAuth() {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -656,56 +676,13 @@
             return true;
         }
 
-        // Show Error Message
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            const successDiv = document.getElementById('successMessage');
-            
-            // Hide any existing success message
-            successDiv.classList.remove('message-visible');
-            
-            errorDiv.textContent = message;
-            errorDiv.classList.add('message-visible');
-            
-            setTimeout(() => {
-                errorDiv.classList.remove('message-visible');
-            }, 3000);
-        }
-
-        // Show Success Message
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            const errorDiv = document.getElementById('errorMessage');
-            
-            // Hide any existing error message
-            errorDiv.classList.remove('message-visible');
-            
-            successDiv.textContent = message;
-            successDiv.classList.add('message-visible');
-            
-            setTimeout(() => {
-                successDiv.classList.remove('message-visible');
-            }, 3000);
-        }
-
-        // Show notification
-        function showNotification() {
-            const overlay = document.getElementById('notificationOverlay');
-            overlay.style.display = 'flex';
-        }
-
-        // Close notification
-        function closeNotification() {
-            const overlay = document.getElementById('notificationOverlay');
-            overlay.style.display = 'none';
-        }
-
         // Load Balance and Package Status
         async function loadBalance() {
             if (!checkAuth()) return;
 
             const token = localStorage.getItem('token');
             try {
+                console.log('Fetching package status from:', `${API_URL}/api/earnings/package-status`);
                 // First check package status
                 const statusResponse = await fetch(`${API_URL}/api/earnings/package-status`, {
                     method: 'GET',
@@ -716,6 +693,7 @@
                 });
                 
                 const statusData = await statusResponse.json();
+                console.log('Package status response:', statusData);
                 
                 // If there's an active package, disable all invest buttons
                 const investButtons = document.querySelectorAll('.invest-btn');
@@ -735,6 +713,7 @@
                     });
                 }
 
+                console.log('Fetching balance from:', `${API_URL}/api/earnings`);
                 // Then load balance
                 const balanceResponse = await fetch(`${API_URL}/api/earnings`, {
                     method: 'GET',
@@ -748,6 +727,7 @@
                     throw new Error(`Failed to load balance: ${balanceResponse.status}`);
                 }
                 const data = await balanceResponse.json();
+                console.log('Balance response:', data);
                 
                 if (data.success) {
                     const balance = data.balance || 0;
@@ -821,6 +801,18 @@
                 console.error('Error:', error);
                 showError('Error purchasing package');
             }
+        }
+
+        // Show notification
+        function showNotification() {
+            const overlay = document.getElementById('notificationOverlay');
+            overlay.style.display = 'flex';
+        }
+
+        // Close notification
+        function closeNotification() {
+            const overlay = document.getElementById('notificationOverlay');
+            overlay.style.display = 'none';
         }
 
         // Initialize page
