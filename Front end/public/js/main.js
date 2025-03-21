@@ -21,12 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Use API URL from config
-    const API_URL = API_CONFIG.API_URL;
+    // Ensure API configuration is available
+    if (!window.API_CONFIG || !window.API_CONFIG.API_URL) {
+        console.error('API configuration not found! Using fallback URL.');
+        window.API_CONFIG = {
+            API_URL: 'http://69.62.119.91:5000'
+        };
+    }
+
+    const API_URL = window.API_CONFIG.API_URL;
 
     console.log('API Configuration:', {
         hostname: window.location.hostname,
-        API_URL: API_URL
+        API_URL: API_URL,
+        config: window.API_CONFIG
     });
 
     // Input validation functions
