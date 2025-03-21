@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // API Configuration
-    const API_URL = 'http://69.62.119.91:5000';  // VPS IP address
+    // Use API URL from config
+    const API_URL = API_CONFIG.API_URL;
 
     console.log('API Configuration:', {
         hostname: window.location.hostname,
