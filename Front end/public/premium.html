@@ -585,7 +585,7 @@
     </script>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        const API_URL = 'http://69.62.119.91:5000';
 
         // Add package configuration
         const PREMIUM_PACKAGES = {
@@ -631,17 +631,26 @@
         function loadBalance() {
             if (!checkAuth()) return;
 
+            console.log('Fetching balance...');
             const token = localStorage.getItem('token');
+            
             fetch(`${API_URL}/api/earnings`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Balance response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Balance response data:', data);
                 if (data.success) {
                     document.getElementById('currentBalance').textContent = `Rs. ${data.balance}`;
+                } else {
+                    console.error('Balance fetch failed:', data.message);
+                    showError(data.message || 'Error loading balance');
                 }
             })
             .catch(error => {
@@ -671,8 +680,11 @@
                 return;
             }
 
+            console.log('Initiating package purchase:', { packageId, amount });
             const token = localStorage.getItem('token');
+
             try {
+                console.log('Sending purchase request...');
                 const response = await fetch(`${API_URL}/api/earnings/purchase`, {
                     method: 'POST',
                     headers: {
@@ -685,7 +697,9 @@
                     })
                 });
 
+                console.log('Purchase response status:', response.status);
                 const data = await response.json();
+                console.log('Purchase response data:', data);
 
                 if (data.success) {
                     // Reset timer state
@@ -706,7 +720,7 @@
                     }
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error purchasing package:', error);
                 showError('Error purchasing package');
             }
         }
