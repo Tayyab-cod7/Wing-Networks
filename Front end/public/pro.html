@@ -556,15 +556,29 @@
     </script>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        // API Configuration
+        const API_URL = 'http://69.62.119.91:5000';
 
-        // Add package configuration
-        const PRO_PACKAGES = {
-            'pro1': { price: 3000, dailyRate: 450, name: 'Pro Plan 1', icon: 'crown' },
-            'pro2': { price: 4000, dailyRate: 600, name: 'Pro Plan 2', icon: 'gem' }
-        };
+        // Error and success message handling
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
 
-        // Check Authentication
+        function showSuccess(message) {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Authentication check
         function checkAuth() {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -574,51 +588,70 @@
             return true;
         }
 
-        // Show Error Message
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            if (errorDiv) {
-                errorDiv.textContent = message;
-                errorDiv.style.display = 'block';
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                }, 3000);
-            }
-        }
-
-        // Show Success Message
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            if (successDiv) {
-                successDiv.textContent = message;
-                successDiv.style.display = 'block';
-                setTimeout(() => {
-                    successDiv.style.display = 'none';
-                }, 3000);
-            }
-        }
-
-        // Load User Balance
-        function loadBalance() {
+        // Load Balance and Package Status
+        async function loadBalance() {
             if (!checkAuth()) return;
 
             const token = localStorage.getItem('token');
-            fetch(`${API_URL}/api/earnings`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+            try {
+                console.log('Fetching package status from:', `${API_URL}/api/earnings/package-status`);
+                // First check package status
+                const statusResponse = await fetch(`${API_URL}/api/earnings/package-status`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const statusData = await statusResponse.json();
+                console.log('Package status response:', statusData);
+                
+                // If there's an active package, disable all invest buttons
+                const investButtons = document.querySelectorAll('.invest-btn');
+                if (statusData.hasActivePackage) {
+                    investButtons.forEach(button => {
+                        button.disabled = true;
+                        button.textContent = `Package Active (${statusData.remainingDays} days left)`;
+                        button.style.backgroundColor = '#ccc';
+                        button.style.cursor = 'not-allowed';
+                    });
+                } else {
+                    investButtons.forEach(button => {
+                        button.disabled = false;
+                        button.textContent = 'Invest Now';
+                        button.style.backgroundColor = '';
+                        button.style.cursor = 'pointer';
+                    });
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
+
+                console.log('Fetching balance from:', `${API_URL}/api/earnings`);
+                // Then load balance
+                const balanceResponse = await fetch(`${API_URL}/api/earnings`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!balanceResponse.ok) {
+                    throw new Error(`Failed to load balance: ${balanceResponse.status}`);
+                }
+                const data = await balanceResponse.json();
+                console.log('Balance response:', data);
+                
                 if (data.success) {
-                    document.getElementById('currentBalance').textContent = `Rs. ${data.balance}`;
+                    const balance = data.balance || 0;
+                    document.getElementById('currentBalance').textContent = `Rs. ${balance}`;
+                } else {
+                    console.error('Invalid balance data:', data);
+                    showError(data.message || 'Error loading balance');
                 }
-            })
-            .catch(error => {
-                console.error('Error loading balance:', error);
-                showError('Error loading balance');
-            });
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error loading data. Please refresh the page.');
+            }
         }
 
         // Purchase Package
@@ -644,6 +677,7 @@
 
             const token = localStorage.getItem('token');
             try {
+                console.log('Purchasing package:', { packageId, amount });
                 const response = await fetch(`${API_URL}/api/earnings/purchase`, {
                     method: 'POST',
                     headers: {
@@ -657,6 +691,7 @@
                 });
 
                 const data = await response.json();
+                console.log('Purchase response:', data);
 
                 if (data.success) {
                     // Reset timer state
@@ -682,11 +717,27 @@
             }
         }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            if (checkAuth()) {
-                loadBalance();
-            }
+        // Show notification
+        function showNotification() {
+            const overlay = document.getElementById('notificationOverlay');
+            overlay.style.display = 'flex';
+        }
+
+        // Close notification
+        function closeNotification() {
+            const overlay = document.getElementById('notificationOverlay');
+            overlay.style.display = 'none';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAuth()) return;
+            
+            // Load initial balance and package status
+            loadBalance();
+            
+            // Refresh balance and package status every 30 seconds
+            setInterval(loadBalance, 30000);
         });
     </script>
 </body>
