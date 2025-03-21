@@ -201,11 +201,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setLoading(form, true);
 
-            const response = await fetch(`${API_URL}/api/auth/register`, {
+            // Use direct VPS IP address for API calls
+            const apiUrl = 'http://69.62.119.91:5000';
+            const response = await fetch(`${apiUrl}/api/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
                 },
                 body: JSON.stringify(registrationData)
             });
@@ -259,10 +262,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 try {
                     // Admin login through API
-                    const response = await fetch(`${API_URL}/api/auth/login`, {
+                    const apiUrl = 'http://69.62.119.91:5000';
+                    const response = await fetch(`${apiUrl}/api/auth/login`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
                         },
                         body: JSON.stringify({ 
                             phone,
@@ -300,10 +306,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Regular user login
-            const response = await fetch(`${API_URL}/api/auth/login`, {
+            const apiUrl = 'http://69.62.119.91:5000';
+            const response = await fetch(`${apiUrl}/api/auth/login`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
                 },
                 body: JSON.stringify({ phone, password })
             });
