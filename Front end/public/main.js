@@ -1,3 +1,9 @@
+// API Configuration
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_URL = isLocalhost 
+    ? 'http://localhost:5000'
+    : 'http://69.62.119.91:5000';
+
 // Handle signup form submission
 document.getElementById('signupForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -14,6 +20,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         };
 
         console.log('Sending registration data:', registrationData);
+        console.log('Using API URL:', API_URL);  // Add this line for debugging
 
         const response = await fetch(`${API_URL}/api/auth/register`, {
             method: 'POST',
