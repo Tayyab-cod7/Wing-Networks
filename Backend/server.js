@@ -40,12 +40,19 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:5000', 'http://69.62.119.91:5000', 'http://69.62.119.91'],
+  origin: process.env.NODE_ENV === 'production'
+    ? ['http://69.62.119.91:5000', 'http://69.62.119.91']
+    : ['http://localhost:5000', 'http://localhost:3000', 'http://127.0.0.1:5000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
 };
+
+// Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Add CORS headers for preflight requests
+app.options('*', cors(corsOptions));
 
 // Request logging middleware
 app.use((req, res, next) => {
