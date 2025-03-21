@@ -496,7 +496,7 @@
     </style>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        const API_URL = 'http://69.62.119.91:5000';
 
         // Add package configuration at the top of your script
         const PACKAGES = {
@@ -569,12 +569,15 @@
         async function loadEarnings() {
             if (!checkAuth()) return;
 
+            console.log('Starting to load earnings data...');
             // Cleanup any existing countdown
             cleanupPackageCountdown();
 
             const token = localStorage.getItem('token');
+            
             try {
                 // First check package status
+                console.log('Fetching package status...');
                 const statusResponse = await fetch(`${API_URL}/api/earnings/package-status`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -582,10 +585,12 @@
                     }
                 });
                 
+                console.log('Package status response:', statusResponse.status);
                 const statusData = await statusResponse.json();
-                console.log('Package status:', statusData);
+                console.log('Package status data:', statusData);
 
                 // Then load earnings
+                console.log('Fetching earnings data...');
                 const earningsResponse = await fetch(`${API_URL}/api/earnings`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -593,13 +598,16 @@
                     }
                 });
 
+                console.log('Earnings response:', earningsResponse.status);
                 const data = await earningsResponse.json();
+                console.log('Earnings data:', data);
                 
                 if (data.success) {
                     document.getElementById('currentBalance').textContent = data.balance || 0;
                     
                     // Update active package display
                     if (statusData.hasActivePackage) {
+                        console.log('Active package found:', statusData.activePackage);
                         const package = PACKAGES[statusData.activePackage];
                         if (package) {
                             const remainingDays = Math.ceil((new Date(statusData.packageEndDate) - new Date()) / (1000 * 60 * 60 * 24));
@@ -631,10 +639,12 @@
                             // Enable earn button when package is active and check if it's a new package
                             const lastEarnTime = localStorage.getItem('lastEarnTime');
                             if (!lastEarnTime || new Date(statusData.packageStartDate) > new Date(parseInt(lastEarnTime))) {
+                                console.log('New package or first time - enabling earning');
                                 // This is a new package or first time - enable earning
                                 localStorage.removeItem('lastEarnTime');
                                 enableEarnButton();
                             } else {
+                                console.log('Existing package - checking timer');
                                 // Existing package - check timer as usual
                                 updateTimer();
                             }
@@ -663,7 +673,9 @@
 
         // Earn Daily
         function earnDaily() {
+            console.log('Starting earnDaily function...');
             const token = localStorage.getItem('token');
+            
             if (!token) {
                 console.log('No token found in earnDaily');
                 window.location.href = 'index.html';
@@ -673,6 +685,7 @@
             // Check if there's an active package
             if (!document.getElementById('activePackageCard').style.display || 
                 document.getElementById('activePackageCard').style.display === 'none') {
+                console.log('No active package found');
                 showError('You need an active package to earn rewards');
                 return;
             }
@@ -682,12 +695,13 @@
             if (lastEarnTime) {
                 const timeElapsed = Date.now() - parseInt(lastEarnTime);
                 if (timeElapsed < 24 * 60 * 60 * 1000) {
+                    console.log('Cooldown still active');
                     showError('Please wait for the cooldown to finish');
                     return;
                 }
             }
 
-            console.log('Earning daily with token:', token);
+            console.log('Making earn request...');
             fetch(`${API_URL}/api/earnings/earn`, {
                 method: 'POST',
                 headers: {
@@ -696,6 +710,7 @@
                 }
             })
             .then(async response => {
+                console.log('Earn response status:', response.status);
                 if (!response.ok) {
                     if (response.status === 401) {
                         console.log('Token expired or invalid');
@@ -709,6 +724,7 @@
                 return response.json();
             })
             .then(data => {
+                console.log('Earn response data:', data);
                 if (data.success) {
                     console.log('Earn successful:', data);
                     showSuccess(`Successfully earned Rs. ${data.dailyEarningRate}!`);
@@ -718,6 +734,7 @@
                     localStorage.setItem('lastEarnTime', Date.now().toString());
                     updateTimer();
                 } else {
+                    console.error('Earn failed:', data.message);
                     showError(data.message || 'Failed to earn');
                 }
             })
