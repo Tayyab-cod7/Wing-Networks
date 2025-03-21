@@ -386,7 +386,7 @@
     </script>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        const API_URL = 'http://69.62.119.91:5000';
         const contactForm = document.getElementById('contactForm');
         const submitBtn = document.getElementById('submitBtn');
         const successAlert = document.getElementById('successAlert');
@@ -396,6 +396,7 @@
         function checkAuth() {
             const token = localStorage.getItem('token');
             if (!token) {
+                console.log('No token found, redirecting to login...');
                 window.location.href = 'index.html';
                 return false;
             }
@@ -404,6 +405,7 @@
 
         // Show Success Message
         function showSuccess(message) {
+            console.log('Showing success message:', message);
             successAlert.textContent = message;
             successAlert.style.display = 'block';
             errorAlert.style.display = 'none';
@@ -414,6 +416,7 @@
 
         // Show Error Message
         function showError(message) {
+            console.error('Showing error message:', message);
             errorAlert.textContent = message;
             errorAlert.style.display = 'block';
             successAlert.style.display = 'none';
@@ -430,7 +433,12 @@
             const subject = document.getElementById('subject').value.trim();
             const message = document.getElementById('message').value.trim();
 
+            console.log('Submitting contact form...');
+            console.log('Subject:', subject);
+            console.log('Message length:', message.length);
+
             if (!subject || !message) {
+                console.log('Form validation failed: Missing fields');
                 showError('Please fill in all fields');
                 return;
             }
@@ -440,6 +448,8 @@
 
             try {
                 const token = localStorage.getItem('token');
+                console.log('Sending message to API...');
+                
                 const response = await fetch(`${API_URL}/api/contact`, {
                     method: 'POST',
                     headers: {
@@ -449,16 +459,20 @@
                     body: JSON.stringify({ subject, message })
                 });
 
+                console.log('API response status:', response.status);
                 const data = await response.json();
+                console.log('API response data:', data);
 
                 if (data.success) {
+                    console.log('Message sent successfully');
                     showSuccess('Message sent successfully!');
                     contactForm.reset();
                 } else {
+                    console.error('API returned error:', data.message);
                     throw new Error(data.message || 'Failed to send message');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error sending message:', error);
                 showError(error.message || 'Failed to send message');
             } finally {
                 submitBtn.disabled = false;
@@ -467,7 +481,10 @@
         });
 
         // Check authentication on page load
-        document.addEventListener('DOMContentLoaded', checkAuth);
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, checking authentication...');
+            checkAuth();
+        });
     </script>
 </body>
 </html> 
