@@ -21,20 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Ensure API configuration is available
-    if (!window.API_CONFIG || !window.API_CONFIG.API_URL) {
-        console.error('API configuration not found! Using fallback URL.');
-        window.API_CONFIG = {
-            API_URL: 'http://69.62.119.91:5000'
-        };
-    }
-
-    const API_URL = window.API_CONFIG.API_URL;
+    // API Configuration - hardcode the API URL
+    const API_URL = 'http://69.62.119.91:5000';
 
     console.log('API Configuration:', {
         hostname: window.location.hostname,
-        API_URL: API_URL,
-        config: window.API_CONFIG
+        API_URL: API_URL
     });
 
     // Input validation functions
@@ -192,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const registrationData = {
                 phone,
                 password,
-                referralCode  // Using referralCode instead of referredBy
+                referralCode
             };
 
             console.log('Current hostname:', window.location.hostname);
@@ -201,14 +193,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setLoading(form, true);
 
-            // Use direct VPS IP address for API calls
-            const apiUrl = 'http://69.62.119.91:5000';
-            const response = await fetch(`${apiUrl}/api/auth/register`, {
+            const response = await fetch(`${API_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify(registrationData)
             });
@@ -222,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginForm.style.display = 'block';
                 signupForm.style.display = 'none';
             } else {
-                showError(data.message || 'Registration failed');
+                showError(data.message || data.error || 'Registration failed');
             }
         } catch (error) {
             console.error('Registration error:', error);
@@ -262,13 +251,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 try {
                     // Admin login through API
-                    const apiUrl = 'http://69.62.119.91:5000';
-                    const response = await fetch(`${apiUrl}/api/auth/login`, {
+                    const response = await fetch(`${API_URL}/api/auth/login`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'Access-Control-Allow-Origin': '*'
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({ 
                             phone,
@@ -306,13 +293,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Regular user login
-            const apiUrl = 'http://69.62.119.91:5000';
-            const response = await fetch(`${apiUrl}/api/auth/login`, {
+            const response = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ phone, password })
             });
